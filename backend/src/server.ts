@@ -3,14 +3,20 @@ import cors from "cors";
 import "dotenv/config";
 
 import pool from "./database/oracle.js"
-import departmentRoutes from "./routes/departmentRoutes.js";
 
+import departmentRoutes from "./routes/departmentRoutes.js";
+import jobPositionRoutes from "./routes/jobPositionRoutes.js";
+import employeeRoutes from "./routes/employeeRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-app.use("/v1/departments", departmentRoutes)
+app.use("/v1/departments", departmentRoutes);
+app.use("/v1/job-positions", jobPositionRoutes);
+app.use("/v1/employees", employeeRoutes);
+app.use("/v1/users", userRoutes);
 const PORT = process.env.PORT || 30001;
 
 

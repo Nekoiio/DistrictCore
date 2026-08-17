@@ -8,15 +8,23 @@ import {
     deleteDepartment
 } from "../controllers/departmentController.js";
 
-import { authenticate }
-    from "../middleware/authenticate.js";
+import { getJobPositionsByDepartment } from "../controllers/jobPositionController.js"
 
-import { requirePermission }
-    from "../middleware/authorize.js";
+
+import { authenticate } from "../middleware/authenticate.js";
+import { requirePermission } from "../middleware/authorize.js";
 
 const router = Router();
 
 router.use(authenticate);
+
+
+
+router.get(
+    "/:departmentId/job-positions",
+    requirePermission("job_position.read"),
+    getJobPositionsByDepartment
+);
 
 router.get(
     "/",
@@ -47,5 +55,6 @@ router.delete(
     requirePermission("department.manage"),
     deleteDepartment
 );
+
 
 export default router;

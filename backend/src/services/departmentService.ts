@@ -1,5 +1,11 @@
 import * as departmentRepo from "../repositories/departmentRepository.js"
 
+export interface UpdateDepartmentData {
+    name?: string;
+    description?: string | null;
+}
+
+
 export async function createDepartment(
     name: string,
     description?: string 
@@ -24,7 +30,8 @@ export async function getDepartments()
 
 export async function getDepartmentById(
     departmentId: number
-) {
+) 
+{
     if (!Number.isInteger(departmentId) || departmentId <= 0) {
         throw new Error("Invalid department ID");
     }
@@ -37,4 +44,37 @@ export async function getDepartmentById(
     }
 
     return department;
+}
+
+export async function updateDepartment(
+    departmentId: number,
+    data: UpdateDepartmentData
+) 
+{
+    const existingDepartment =
+        await departmentRepo.findById(departmentId);
+
+    if (!existingDepartment) {
+        throw new Error("Department not found.");
+    }
+
+    return await departmentRepo.updateDepartment(
+        departmentId,
+        data
+    );
+}
+
+export async function deleteDepartment(
+    departmentId: number
+) {
+    const existingDepartment =
+        await departmentRepo.findById(departmentId);
+
+    if (!existingDepartment) {
+        throw new Error("Department not found.");
+    }
+
+    return await departmentRepo.deleteDepartment(
+        departmentId
+    );
 }

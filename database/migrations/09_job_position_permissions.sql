@@ -16,7 +16,7 @@ VALUES (
     'Create, update, and delete job positions.'
 );
 
-
+-- ADMIN
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.role_id, p.permission_id
 FROM roles r
@@ -24,7 +24,7 @@ CROSS JOIN permissions p
 WHERE r.name = 'ADMIN'
   AND p.name IN ('job_position.read', 'job_position.manage');
 
-
+-- HR
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.role_id, p.permission_id
 FROM roles r
@@ -32,6 +32,7 @@ CROSS JOIN permissions p
 WHERE r.name = 'HR'
   AND p.name IN ('job_position.read', 'job_position.manage');
 
+-- MANAGER
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.role_id, p.permission_id
 FROM roles r
@@ -39,6 +40,7 @@ CROSS JOIN permissions p
 WHERE r.name = 'MANAGER'
   AND p.name = 'job_position.read';
 
+-- EMPLOYEE
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.role_id, p.permission_id
 FROM roles r

@@ -5,6 +5,11 @@ export interface CreateDepartmentData {
     name: string;
     description?: string;
 }
+export interface Department {
+    DEPARTMENT_ID: number;
+    NAME: string;
+    DESCRIPTION: string | null;
+}
 
 export async function createDepartment(
     data: CreateDepartmentData
@@ -74,7 +79,7 @@ export async function findById(
     try {
         connection = await pool.getConnection();
 
-        const result = await connection.execute(
+        const result = await connection.execute<Department>(
             `
             SELECT
                 department_id,
@@ -88,9 +93,7 @@ export async function findById(
             }
         );
 
-        const department = result.rows?.[0];
-
-        return department ?? null;
+        return result.rows?.[0] ?? null;
     } finally {
         if (connection) {
             await connection.close();
@@ -110,18 +113,28 @@ export async function updateDepartment(
     const connection = await pool.getConnection();
 
     try {
+        const fields: string[] = [];
+
         const result = await connection.execute(
             `
             UPDATE departments
             SET
-                name = COALESCE(:name, name),
-                description = COALESCE(:description, description)
+                name = CASE
+                    WHEN :nameProvided = 1 THEN :name
+                    ELSE name
+                END,
+                description = CASE
+                    WHEN :descriptionProvided = 1 THEN :description
+                    ELSE description
+                END
             WHERE department_id = :departmentId
             `,
             {
                 departmentId,
                 name: data.name ?? null,
-                description: data.description ?? null
+                nameProvided: data.name !== undefined ? 1 : 0,
+                description: data.description ?? null,
+                descriptionProvided: data.description !== undefined ? 1 : 0
             }
         );
 
