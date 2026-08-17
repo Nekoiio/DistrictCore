@@ -1,10 +1,52 @@
+import "dotenv/config";
 import type {
     NextFunction,
     Request,
     Response
 } from "express";
 
+import { createRemoteJWKSet, jwtVerify } from "jose";
+
 import pool from "../database/oracle.js";
+
+
+function requireEnv(name: string): string {
+    const value = process.env[name];
+
+    if (!value) {
+        throw new Error(
+            `${name} is not configured.`
+        );
+    }
+
+    return value;
+}
+
+const KEYCLOAK_ISSUER =
+    requireEnv("KEYCLOAK_ISSUER");
+
+const KEYCLOAK_AUDIENCE =
+    requireEnv("KEYCLOAK_AUDIENCE");
+
+if (!KEYCLOAK_ISSUER) {
+    throw new Error(
+        "KEYCLOAK_ISSUER is not configured."
+    );
+}
+
+if (!KEYCLOAK_AUDIENCE) {
+    throw new Error(
+        "KEYCLOAK_AUDIENCE is not configured."
+    );
+}
+
+const JWKS = createRemoteJWKSet(
+    new URL(
+        `${KEYCLOAK_ISSUER}/protocol/openid-connect/certs`
+    )
+);
+
+
 
 export async function authenticate(
     req: Request,
@@ -12,11 +54,41 @@ export async function authenticate(
     next: NextFunction
 ) {
     try {
-        const identityId = req.header("X-Dev-Identity-Id");
+        const authorization =
+            req.header("Authorization");
+
+        if (!authorization) {
+            res.status(401).json({
+                error: "Authentication required."
+            });
+
+            return;
+        }
+
+        const [scheme, token] =
+            authorization.split(" ");
+
+        if (scheme !== "Bearer" || !token) {
+            res.status(401).json({
+                error: "Invalid authentication token."
+            });
+
+            return;
+        }
+
+        const { payload } = await jwtVerify(
+            token,
+            JWKS,
+            {
+                issuer: KEYCLOAK_ISSUER,
+                audience: KEYCLOAK_AUDIENCE
+            }
+        );
+        const identityId = payload.sub;
 
         if (!identityId) {
             res.status(401).json({
-                error: "Authentication required."
+                error: "Authentication identity missing."
             });
 
             return;
@@ -25,7 +97,8 @@ export async function authenticate(
         let connection;
 
         try {
-            connection = await pool.getConnection();
+            connection =
+                await pool.getConnection();
 
             const result = await connection.execute<
                 [number, string, string, number]
@@ -46,11 +119,14 @@ export async function authenticate(
 
             const user = result.rows?.[0];
 
-            console.log("AUTH USER FROM DB:", user);
+            //console.log(
+              //  "AUTH USER FROM DB:",
+                //user
+            //);
 
             if (!user) {
                 res.status(401).json({
-                    error: "Invalid authentication."
+                    error: "Authenticated identity is not registered."
                 });
 
                 return;
@@ -64,16 +140,21 @@ export async function authenticate(
             };
 
             next();
+
         } finally {
             if (connection) {
                 await connection.close();
             }
         }
-    } catch (error) {
-        console.error(error);
 
-        res.status(500).json({
-            error: "Authentication failed."
+    } catch (error) {
+        console.error(
+            "Authentication error:",
+            error
+        );
+
+        res.status(401).json({
+            error: "Invalid authentication token."
         });
     }
 }

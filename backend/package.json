@@ -19,6 +19,8 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "jose": "^6.2.9",
+    "keycloak-js": "^26.2.4",
     "oracledb": "^7.0.1"
   },
   "devDependencies": {

@@ -1,4 +1,4 @@
-import OracleDB from "oracledb";
+import oracledb from "oracledb";
 import pool from "../database/oracle.js";
 
 export interface CreateDepartmentData {
@@ -51,13 +51,17 @@ export async function findAll()
 
         const result = await connection.execute(
             `
-            SELECT 
+            SELECT
                 department_id,
                 name,
                 description
             FROM departments
             ORDER BY department_id
-            `
+            `,
+            {},
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
+            }
         );
 
         return result.rows;
@@ -90,6 +94,9 @@ export async function findById(
             `,
             {
                 departmentId
+            },
+            {
+                outFormat: oracledb.OUT_FORMAT_OBJECT
             }
         );
 

@@ -16,7 +16,7 @@ VALUES (
     'Create, update, and delete job positions.'
 );
 
--- ADMIN
+-- ADMN
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.role_id, p.permission_id
 FROM roles r
@@ -40,7 +40,7 @@ CROSS JOIN permissions p
 WHERE r.name = 'MANAGER'
   AND p.name = 'job_position.read';
 
--- EMPLOYEE
+-- EMPOYEE
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.role_id, p.permission_id
 FROM roles r
