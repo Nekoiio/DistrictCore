@@ -97,3 +97,62 @@ export async function findById(
         }
     }
 }
+
+export interface UpdateDepartmentData {
+    name?: string;
+    description?: string | null;
+}
+
+export async function updateDepartment(
+    departmentId: number,
+    data: UpdateDepartmentData
+) {
+    const connection = await pool.getConnection();
+
+    try {
+        const result = await connection.execute(
+            `
+            UPDATE departments
+            SET
+                name = COALESCE(:name, name),
+                description = COALESCE(:description, description)
+            WHERE department_id = :departmentId
+            `,
+            {
+                departmentId,
+                name: data.name ?? null,
+                description: data.description ?? null
+            }
+        );
+
+        await connection.commit();
+
+        return result;
+    } finally {
+        await connection.close();
+    }
+}
+
+export async function deleteDepartment(
+    departmentId: number
+) {
+    const connection = await pool.getConnection();
+
+    try {
+        const result = await connection.execute(
+            `
+            DELETE FROM departments
+            WHERE department_id = :departmentId
+            `,
+            {
+                departmentId
+            }
+        );
+
+        await connection.commit();
+
+        return result;
+    } finally {
+        await connection.close();
+    }
+}
